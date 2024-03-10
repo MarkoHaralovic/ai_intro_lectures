@@ -75,6 +75,7 @@ def find_path_bfs(state, parent):
     return path[::-1]
 
 def find_path_ucs(state,parent):
+   # print(parent)
    path = [state]
    while state in parent:
       state = parent[state]
@@ -89,19 +90,17 @@ def bfs(s0,succ,goal):
    open = [(s0, 0, 0)]
    parent = {s0: None}
    visited = set([s0])
-   
    while open:
       x_state,x_depth,x_cost = open.pop(0)
-
+      #visited.add(x_state)
       if x_state in goal:
          path = find_path_bfs(x_state,parent)
-         return x_state,True,x_depth+1,len(visited),x_cost,path
-      
+         return x_state,True,len(path),len(visited),x_cost,path
       for m_state,m_cost in succ[x_state].items():
          if m_state not in visited:
-               visited.add(m_state)
-               parent[m_state] = x_state
-               open.append((m_state, x_depth + 1, m_cost + x_cost))
+            visited.add(m_state)
+            parent[m_state] = x_state
+            open.append((m_state, x_depth + 1, m_cost + x_cost))
    return None,False,None,len(visited),None
 
 def ucs(s0,succ,goal):
@@ -122,12 +121,15 @@ def ucs(s0,succ,goal):
             if m_state not in parent:
                parent[m_state] = x_state
             else:
-               if x_cost + m_cost < x_cost:
-                  parent[m_state] = x_state
+               if parent[m_state] is not None:
+                  if x_cost + m_cost < state_transitions[parent[m_state]][m_state]:
+                     parent[m_state] = x_state
             open.append((m_state, x_depth + 1, m_cost + x_cost))
             open.sort(key=lambda x:x[2])
    return None,False,None,len(visited),None
 
+
+ 
 if alg == 'bfs':
    x_state,found,x_depth,visited,x_cost,path = bfs(initial_state,state_transitions,goal_states)
    output = f"# BFS {ss.split('/')[-1]}\n"
@@ -135,7 +137,8 @@ if alg == 'bfs':
    output+= f"[STATES_VISITED]: {visited}\n"
    output+= f"[PATH_LENGTH]: {x_depth}\n"
    output+= f"[TOTAL_COST]: {x_cost}\n"
-   output+= f"[PATH]: {' => '.join(path)}\n"
+   output+= f"[PATH]: {' => '.join(path)}"
+   print(output)
 elif alg == 'ucs':
    x_state,found,x_depth,visited,x_cost,path = ucs(initial_state,state_transitions,goal_states)
    output = f"# UCS {ss.split('/')[-1]}\n"
@@ -143,12 +146,13 @@ elif alg == 'ucs':
    output+= f"[STATES_VISITED]: {visited}\n"
    output+= f"[PATH_LENGTH]: {x_depth}\n"
    output+= f"[TOTAL_COST]: {x_cost}\n"
-   output+= f"[PATH]: {' => '.join(path)}\n"
+   output+= f"[PATH]: {' => '.join(path)}"
+   print(output)
    
 #BFS
-#AI fail_course True  3 6 21  enroll_artificial_intelligence => fail_lab => fail_course
-#ISTRA Buzet True 5 11(17) 100 Pula => Barban => Labin => Lupoglav => Buzet
+#AI fail_course True  6 3 21  enroll_artificial_intelligence => fail_lab => fail_course
+#ISTRA Buzet True 11(17) 5 100 Pula => Barban => Labin => Lupoglav => Buzet
 
 #ucs
-#AI pass_course True  4 7 17  enroll_artificial_intelligence => complete_lab => pass_continuous =>pass_course
-#Istra Buzet True 5 17 (16) 100 Pula => Barban => Labin => Lupoglav => Buzet
+#AI pass_course True  7 4 17  enroll_artificial_intelligence => complete_lab => pass_continuous =>pass_course
+#Istra Buzet True 17 5 100 Pula => Barban => Labin => Lupoglav => Buzet
