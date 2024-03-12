@@ -156,11 +156,11 @@ def ucs(s0, succ, goal):
 
         for m_state, m_cost in succ[x_state].items():
             new_cost = x_cost + m_cost
+            if m_state not in visited:
+                    open_set.append((m_state, new_cost))
             if m_state not in cost_to_state or new_cost < cost_to_state[m_state]:
                 parent[m_state] = x_state
                 cost_to_state[m_state] = new_cost
-                if m_state not in visited:
-                    open_set.append((m_state, new_cost))
 
     return None, False, None, len(visited), None, None
  
@@ -190,4 +190,4 @@ elif alg == 'ucs':
 
 #ucs
 #AI pass_course True  7 4 17  enroll_artificial_intelligence => complete_lab => pass_continuous =>pass_course
-#Istra Buzet True 17(16) 5 100 Pula => Barban => Labin => Lupoglav => Buzet
+#Istra Buzet True 17 5 100 Pula => Barban => Labin => Lupoglav => Buzet
