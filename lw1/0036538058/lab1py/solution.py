@@ -68,6 +68,8 @@ def init_state_space(ss_lines):
 initial_state, goal_states, state_transitions = init_state_space(ss_lines)
 
 def find_path_bfs(state, parent):
+   #  print("....................")
+   #  print(parent)
     path = []
     while state is not None:
         path.append(state)
@@ -75,7 +77,7 @@ def find_path_bfs(state, parent):
     return path[::-1]
 
 def find_path_ucs(state,parent):
-   # print(parent)
+   #print(parent)
    path = [state]
    while state in parent:
       state = parent[state]
@@ -83,52 +85,84 @@ def find_path_ucs(state,parent):
    path.reverse()
    path.pop(0)
    return path
+
    
 def bfs(s0,succ,goal):
    if s0 in goal:
       return s0,True,0,1,0,s0
    open = [(s0, 0, 0)]
    parent = {s0: None}
+   #depth_dict = {0 : [s0]}
    visited = set([s0])
    while open:
       x_state,x_depth,x_cost = open.pop(0)
-      #visited.add(x_state)
+      # if x_depth not in depth_dict:
+      #    depth_dict[x_depth] = []
+      # depth_dict[x_depth].append(x_state)
+      # print(x_state,x_depth,x_cost)
       if x_state in goal:
+         #total_states_before_current_depth = sum(len(depth_dict[d]) for d in depth_dict if d < x_depth)
          path = find_path_bfs(x_state,parent)
          return x_state,True,len(path),len(visited),x_cost,path
+
       for m_state,m_cost in succ[x_state].items():
          if m_state not in visited:
             visited.add(m_state)
             parent[m_state] = x_state
             open.append((m_state, x_depth + 1, m_cost + x_cost))
+      open.sort(key=lambda x:x[1])
    return None,False,None,len(visited),None
 
-def ucs(s0,succ,goal):
+def ucs22(s0,succ,goal):
    if s0 in goal:
       return s0,True,0,1,0,s0
    open = [(s0,0,0)]
    parent = {s0:None}
-   visited = set([s0])
+   cost_to_state = {s0: 0}
    
    while open:
+      open.sort(key=lambda x:x[2])
       x_state,x_depth,x_cost = open.pop(0)
-      visited.add(x_state)
+     
       if x_state in goal:
          path = find_path_ucs(x_state,parent)
-         return x_state,True,x_depth+1,len(visited),x_cost,path
+         return x_state,True,len(path),len(cost_to_state),x_cost,path
+      
       for m_state,m_cost in succ[x_state].items():
-         if m_state:
-            if m_state not in parent:
-               parent[m_state] = x_state
-            else:
-               if parent[m_state] is not None:
-                  if x_cost + m_cost < state_transitions[parent[m_state]][m_state]:
-                     parent[m_state] = x_state
-            open.append((m_state, x_depth + 1, m_cost + x_cost))
-            open.sort(key=lambda x:x[2])
+         cost = x_cost + m_cost
+         if m_state not in cost_to_state or cost < cost_to_state[m_state]:
+            cost_to_state[m_state] =cost
+            parent[m_state] = x_state
+            open.append((m_state,x_depth+1, cost))
    return None,False,None,len(visited),None
 
+def ucs(s0, succ, goal):
+    if s0 in goal:
+        return s0, True, 0, 1, 0, [s0]
 
+    open_set = [(s0, 0)]
+    parent = {s0: None}
+    cost_to_state = {s0: 0}
+    visited = set()
+
+    while open_set:
+        open_set.sort(key=lambda x: x[1])  
+        x_state, x_cost = open_set.pop(0)
+        visited.add(x_state)
+
+        if x_state in goal:
+            path = find_path_ucs(x_state, parent)
+            return x_state, True, len(path), len(visited), x_cost, path
+
+        for m_state, m_cost in succ[x_state].items():
+            new_cost = x_cost + m_cost
+            if m_state not in cost_to_state or new_cost < cost_to_state[m_state]:
+                parent[m_state] = x_state
+                cost_to_state[m_state] = new_cost
+                if m_state not in visited:
+                    open_set.append((m_state, new_cost))
+
+    return None, False, None, len(visited), None, None
  
 if alg == 'bfs':
    x_state,found,x_depth,visited,x_cost,path = bfs(initial_state,state_transitions,goal_states)
@@ -152,7 +186,8 @@ elif alg == 'ucs':
 #BFS
 #AI fail_course True  6 3 21  enroll_artificial_intelligence => fail_lab => fail_course
 #ISTRA Buzet True 11(17) 5 100 Pula => Barban => Labin => Lupoglav => Buzet
+                  #11 if we implement depth dict, in that case AI return 4 3 21  
 
 #ucs
 #AI pass_course True  7 4 17  enroll_artificial_intelligence => complete_lab => pass_continuous =>pass_course
-#Istra Buzet True 17 5 100 Pula => Barban => Labin => Lupoglav => Buzet
+#Istra Buzet True 17(16) 5 100 Pula => Barban => Labin => Lupoglav => Buzet
