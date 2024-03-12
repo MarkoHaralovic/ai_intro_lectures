@@ -36,7 +36,7 @@ elif '--ss' and '--h'  and 'check-consistent' in argumentList:
    h = argumentList[argumentList.index('--h') + 1]
    check_consistent = True
 
-#Got the code fromhttps://stackoverflow.com/questions/10487563/unicode-error-handling-with-python-3s-readlines
+#Got the code from https://stackoverflow.com/questions/10487563/unicode-error-handling-with-python-3s-readlines
 state_space_file = open(ss, 'r', encoding='utf-8', errors='ignore')
 ss_lines = state_space_file.readlines()
 
@@ -68,8 +68,6 @@ def init_state_space(ss_lines):
 initial_state, goal_states, state_transitions = init_state_space(ss_lines)
 
 def find_path_bfs(state, parent):
-   #  print("....................")
-   #  print(parent)
     path = []
     while state is not None:
         path.append(state)
@@ -77,7 +75,6 @@ def find_path_bfs(state, parent):
     return path[::-1]
 
 def find_path_ucs(state,parent):
-   #print(parent)
    path = [state]
    while state in parent:
       state = parent[state]
@@ -113,29 +110,6 @@ def bfs(s0,succ,goal):
       open.sort(key=lambda x:x[1])
    return None,False,None,len(visited),None
 
-def ucs22(s0,succ,goal):
-   if s0 in goal:
-      return s0,True,0,1,0,s0
-   open = [(s0,0,0)]
-   parent = {s0:None}
-   cost_to_state = {s0: 0}
-   
-   while open:
-      open.sort(key=lambda x:x[2])
-      x_state,x_depth,x_cost = open.pop(0)
-     
-      if x_state in goal:
-         path = find_path_ucs(x_state,parent)
-         return x_state,True,len(path),len(cost_to_state),x_cost,path
-      
-      for m_state,m_cost in succ[x_state].items():
-         cost = x_cost + m_cost
-         if m_state not in cost_to_state or cost < cost_to_state[m_state]:
-            cost_to_state[m_state] =cost
-            parent[m_state] = x_state
-            open.append((m_state,x_depth+1, cost))
-   return None,False,None,len(visited),None
-
 def ucs(s0, succ, goal):
     if s0 in goal:
         return s0, True, 0, 1, 0, [s0]
@@ -157,7 +131,7 @@ def ucs(s0, succ, goal):
         for m_state, m_cost in succ[x_state].items():
             new_cost = x_cost + m_cost
             if m_state not in visited:
-                    open_set.append((m_state, new_cost))
+                  open_set.append((m_state, new_cost))
             if m_state not in cost_to_state or new_cost < cost_to_state[m_state]:
                 parent[m_state] = x_state
                 cost_to_state[m_state] = new_cost
@@ -190,4 +164,4 @@ elif alg == 'ucs':
 
 #ucs
 #AI pass_course True  7 4 17  enroll_artificial_intelligence => complete_lab => pass_continuous =>pass_course
-#Istra Buzet True 17 5 100 Pula => Barban => Labin => Lupoglav => Buzet
+#Istra Buzet True 17 5 100 Pula => Barban => Labin => Lupoglav => Buzetgit 
