@@ -30,14 +30,15 @@ if '--alg' in argumentList:
             else:
                h_file = argumentList[argumentList.index('--h') + 1]
          ss = argumentList[argumentList.index('--ss') + 1]
-elif '--ss' and '--h'  and '--check-optimistic' in argumentList:
-   ss = argumentList[argumentList.index('--ss') + 1]
-   h_file = argumentList[argumentList.index('--h') + 1]
-   check_optimistic = True
-elif '--ss' and '--h'  and '--check-consistent' in argumentList:
-   ss= argumentList[argumentList.index('--ss') + 1]
-   h_file= argumentList[argumentList.index('--h') + 1]
-   check_consistent = True
+elif '--ss' in argumentList and '--h' in argumentList and '--check-optimistic' in argumentList:
+    ss = argumentList[argumentList.index('--ss') + 1]
+    h_file = argumentList[argumentList.index('--h') + 1]
+    check_optimistic = True
+elif '--ss' in argumentList and '--h' in argumentList and '--check-consistent' in argumentList:
+    ss= argumentList[argumentList.index('--ss') + 1]
+    h_file= argumentList[argumentList.index('--h') + 1]
+    check_consistent = True
+
 
 #Got the code from https://stackoverflow.com/questions/10487563/unicode-error-handling-with-python-3s-readlines
 state_space_file = open(ss, 'r', encoding='utf-8', errors='ignore')
@@ -48,7 +49,7 @@ if alg =='astar' or check_consistent or check_optimistic:
    h_lines = heuristics_file.readlines()
    h_lines = [line.strip("\n") for line in h_lines]
    # print(h_lines)  
-   h = {line.split(": ")[0]:int(line.split(": ")[1]) for line in h_lines}
+   h = {line.split(": ")[0]:float(line.split(": ")[1]) for line in h_lines}
 
 def init_state_space(ss_lines):
    state_transitions = {}
@@ -68,7 +69,7 @@ def init_state_space(ss_lines):
       state_transitions[state] = {}
       for transitions in actions.split(" "):
          if transitions.split(",")[0] and transitions.split(",")[1]:
-            state_transitions[state][transitions.split(",")[0]] = int(transitions.split(",")[1])
+            state_transitions[state][transitions.split(",")[0]] = float(transitions.split(",")[1])
    return initial_state, goal_states, state_transitions
 
 initial_state, goal_states, state_transitions = init_state_space(ss_lines)
@@ -182,7 +183,7 @@ def a_star(s0,succ,goal,h):
          open.sort(key=lambda x: x[2])  
    return 
 
-def check_optimistic(initial_state, state_transitions, goal_states, h):
+def f_check_optimistic(initial_state, state_transitions, goal_states, h):
     cost_to_goal_state = {state: 0 for state in goal_states}
 
     checked = set(goal_states)
@@ -215,9 +216,39 @@ def check_optimistic(initial_state, state_transitions, goal_states, h):
     return output
 
 
-def check_consistent(initial_state,state_transitions,goal_state,h):
-   #h(S) <= h(T) + c: num_1 <= num_2 + num_3
-   pass
+def f_check_consistent(initial_state,state_transitions,goal_state,h):
+    cost_to_goal_state = {state: 0 for state in goal_states}
+
+    checked = set(goal_states)
+
+    next_states = [initial_state]
+    checked.add(initial_state)
+
+    while next_states:
+        current_state = next_states.pop(0)
+        _,_,_,_,cost,_ = ucs(current_state, state_transitions, goal_states)
+        cost_to_goal_state[current_state] = cost
+
+        for next_state in state_transitions.get(current_state, {}):
+            if next_state not in checked:
+                checked.add(next_state)
+                next_states.append(next_state)
+    output = ''
+    consistent=True
+    for state, real_value in cost_to_goal_state.items():
+        for next_state, step_cost in state_transitions[state].items():
+          if h[state] <= h[next_state] + step_cost:
+             output += f"[CONDITION]: [OK] h({state}) <= h({next_state}) + c: {h[state]} <= {h[next_state] } + {step_cost}\n"
+          else:
+             output += f"[CONDITION]: [ERR] h({state}) <= h({next_state}) + c: {h[state]} <= {h[next_state] } + {step_cost}\n"
+             consistent = False
+    if consistent is True:
+         output += f"[CONCLUSION]: Heuristic is consistent.\n"
+    else:
+         output += f"[CONCLUSION]: Heuristic is not consistent.\n"
+
+    return output
+
 
 if alg == 'bfs':
    x_state,found,x_depth,visited,x_cost,path = bfs(initial_state,state_transitions,goal_states)
@@ -250,8 +281,13 @@ elif alg =='astar':
    output+= f"[PATH]: {' => '.join(path)}"
    print(output)
 elif check_optimistic:
+   output = f"# HEURISTIC-OPTIMISTIC {h_file.split('/')[-1]}\n"
+   output += f_check_optimistic(initial_state,state_transitions,goal_states,h)
+   print(output)
+elif check_consistent:
    output = f"# HEURISTIC-CONSISTENT {h_file.split('/')[-1]}\n"
-   output = check_optimistic(initial_state,state_transitions,goal_states,h)
+   output += f_check_consistent(initial_state,state_transitions,goal_states,h)
    print(output)
 
    
+#todo : values should be float
