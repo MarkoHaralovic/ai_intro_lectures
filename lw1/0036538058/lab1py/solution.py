@@ -79,7 +79,7 @@ def find_path_bfs(state, parent):
         state = parent[state]
     return path[::-1]
 
-def find_path_ucs(state,parent):
+def find_path(state,parent):
    path = [state]
    while state in parent:
       state = parent[state]
@@ -130,7 +130,7 @@ def ucs(s0, succ, goal):
         visited.add(x_state)
 
         if x_state in goal:
-            path = find_path_ucs(x_state, parent)
+            path = find_path(x_state, parent)
             return x_state, True, len(path), len(visited), x_cost, path
 
         for m_state, m_cost in succ[x_state].items():
@@ -154,16 +154,14 @@ def a_star(s0,succ,goal,h):
    while open:
       state,g,f = open.pop(0)
       if state in goal:
-         path = find_path_ucs(state, parent)
+         path = find_path(state, parent)
          return state, True, len(path), len(closed.keys()), g, path 
       if state not in closed.keys():
          closed[state] = g
-         # print(closed)
       for m_state,g_cost in succ[state].items():
          h_cost = h[m_state] if m_state in h else None
          
          total_g = g + g_cost
-         # print(m_state,total_g,h_cost)
          if any(m_state == x[0] and total_g < x[1] for x in open):
             open = [x for x in open if x[0] != m_state]
             open.append((m_state, total_g, h_cost))
@@ -180,11 +178,8 @@ def a_star(s0,succ,goal,h):
          parent[m_state] = state
          open.append((m_state,total_g,total_g+h_cost))
          open.sort(key=lambda x: x[2])  
-   
-            
-         
-      
    return 
+
 if alg == 'bfs':
    x_state,found,x_depth,visited,x_cost,path = bfs(initial_state,state_transitions,goal_states)
    response = 'yes' if found else 'no'
