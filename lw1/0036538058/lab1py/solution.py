@@ -11,6 +11,8 @@ algorithms = ['bfs','ucs','astar']
 
 argumentList = sys.argv[1:]
 
+alg,check_optimistic,check_consistent = None,False,False
+
 if '--alg' in argumentList:
    alg = argumentList[argumentList.index('--alg') + 1]
    if alg in algorithms:
@@ -28,11 +30,11 @@ if '--alg' in argumentList:
             else:
                h_file = argumentList[argumentList.index('--h') + 1]
          ss = argumentList[argumentList.index('--ss') + 1]
-elif '--ss' and '--h'  and 'check-optimistic' in argumentList:
+elif '--ss' and '--h'  and '--check-optimistic' in argumentList:
    ss = argumentList[argumentList.index('--ss') + 1]
    h_file = argumentList[argumentList.index('--h') + 1]
    check_optimistic = True
-elif '--ss' and '--h'  and 'check-consistent' in argumentList:
+elif '--ss' and '--h'  and '--check-consistent' in argumentList:
    ss= argumentList[argumentList.index('--ss') + 1]
    h_file= argumentList[argumentList.index('--h') + 1]
    check_consistent = True
@@ -41,7 +43,7 @@ elif '--ss' and '--h'  and 'check-consistent' in argumentList:
 state_space_file = open(ss, 'r', encoding='utf-8', errors='ignore')
 ss_lines = state_space_file.readlines()
 
-if alg =='astar':
+if alg =='astar' or check_consistent or check_optimistic:
    heuristics_file = open(h_file, 'r', encoding='utf-8', errors='ignore')
    h_lines = heuristics_file.readlines()
    h_lines = [line.strip("\n") for line in h_lines]
@@ -180,6 +182,43 @@ def a_star(s0,succ,goal,h):
          open.sort(key=lambda x: x[2])  
    return 
 
+def check_optimistic(initial_state, state_transitions, goal_states, h):
+    cost_to_goal_state = {state: 0 for state in goal_states}
+
+    checked = set(goal_states)
+
+    next_states = [initial_state]
+    checked.add(initial_state)
+
+    while next_states:
+        current_state = next_states.pop(0)
+        _,_,_,_,cost,_ = ucs(current_state, state_transitions, goal_states)
+        cost_to_goal_state[current_state] = cost
+
+        for next_state in state_transitions.get(current_state, {}):
+            if next_state not in checked:
+                checked.add(next_state)
+                next_states.append(next_state)
+    output = ''
+    optimistic=True
+    for state, real_value in cost_to_goal_state.items():
+       if h[state] <= real_value:
+          output += f"[CONDITION]: [OK] h({state}) <= h*: {h[state]} <= {real_value}\n"
+       else:
+          output += f"[CONDITION]: [ERR] h({state}) <= h*: {h[state]} <= {real_value}\n"
+          optimistic=False
+    if optimistic is True:
+         output += f"[CONCLUSION]: Heuristic is optimistic.\n"
+    else:
+         output += f"[CONCLUSION]: Heuristic is not optimistic.\n"
+
+    return output
+
+
+def check_consistent(initial_state,state_transitions,goal_state,h):
+   #h(S) <= h(T) + c: num_1 <= num_2 + num_3
+   pass
+
 if alg == 'bfs':
    x_state,found,x_depth,visited,x_cost,path = bfs(initial_state,state_transitions,goal_states)
    response = 'yes' if found else 'no'
@@ -202,7 +241,6 @@ elif alg == 'ucs':
    print(output)
 elif alg =='astar':
    x_state,found,x_depth,visited,x_cost,path = a_star(initial_state,state_transitions,goal_states,h)
-   output = f"# x_state : {x_state}\n"
    response = 'yes' if found else 'no'
    output = f"# A-STAR {h_file.split('/')[-1]}\n"
    output+= f"[FOUND_SOLUTION]: {response}\n"
@@ -211,5 +249,9 @@ elif alg =='astar':
    output+= f"[TOTAL_COST]: {x_cost}\n"
    output+= f"[PATH]: {' => '.join(path)}"
    print(output)
-   pass
+elif check_optimistic:
+   output = f"# HEURISTIC-CONSISTENT {h_file.split('/')[-1]}\n"
+   output = check_optimistic(initial_state,state_transitions,goal_states,h)
+   print(output)
+
    
