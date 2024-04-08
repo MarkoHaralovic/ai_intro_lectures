@@ -2,7 +2,6 @@ import sys
 import argparse
 import itertools
 
-
 def parse_command_line():
    parser = argparse.ArgumentParser()
    parser.add_argument('task',type=str,choices=['resolution','cooking'],help="Type of task to run")
@@ -13,8 +12,10 @@ def parse_command_line():
 
 def parse_user_commands_file(path_to_user_commands_file):
    pass
+
 def negate(clause):
     return tuple(el.strip("~") if "~" in el else f"~{el}" for el in clause)
+ 
 def is_tautology(clause):
     for literal in clause:
         if literal.startswith("~"):
@@ -24,6 +25,7 @@ def is_tautology(clause):
             if f"~{literal}" in clause:
                 return True
     return False
+
 def remove_redundant_clauses(clauses):
     non_redundant_clauses = set()
     for clause in clauses:
@@ -32,23 +34,35 @@ def remove_redundant_clauses(clauses):
             non_redundant_clauses.add(clause)
     return non_redundant_clauses
 
+
 def parse_clause_file(path_to_clause_file):
-   clauses = {}
-   file = open(path_to_clause_file, 'r')
-   line_number = 0
-   while True:
-      line = file.readline()
-      if not line:
-         file.close()
-         break
-      if line.startswith("#"):continue
-      line_number+=1
-      line_elements = line.strip().split(" ")
-      line_tuple = tuple(element.lower() for element in line_elements if element.lower()!="v")   
-      clauses[line_tuple] = line_number
-      target_clause = line_tuple
-   del clauses[target_clause]
-   return clauses,target_clause,line_number
+    clauses = {}
+    file = open(path_to_clause_file, 'r')
+    line_number = 0
+    while True:
+        line = file.readline()
+        if not line:
+            file.close()
+            break
+        if line.startswith("#"):
+            continue
+        line_number += 1
+        line_elements = line.strip().split(" ")
+        line_tuple = tuple(sorted(element.lower() for element in line_elements if element.lower() != "v"))
+        if is_tautology(line_tuple):
+            line_number -= 1
+            continue
+        clauses[line_tuple] = line_number
+        target_clause = line_tuple
+    orig = target_clause
+    del clauses[target_clause]
+    target_clause_negated = {}
+    for clause in negate(target_clause):
+        negated_clause_tuple = (clause,)
+        target_clause_negated[negated_clause_tuple] = line_number
+        line_number += 1
+    sorted_clauses = {key: clauses[key] for key in sorted(clauses)}
+    return sorted_clauses, target_clause_negated, line_number,orig
 
 def plResolve(clause_1, clause_2,clauses):
     clause1_set = set(clause_1)
@@ -61,33 +75,32 @@ def plResolve(clause_1, clause_2,clauses):
             new_clause = clause1_set.union(clause2_set) - {element, complementary_element}
             if not new_clause: 
                return ("NIL",)
-            if tuple(new_clause) not in clauses.keys():
-                 resolvents.add(tuple(new_clause))
-   #  print(resolvents) if len(resolvents) > 0 else None
+            if is_tautology(new_clause):
+               continue
+            if tuple(sorted(new_clause)) not in clauses.keys():
+                resolvents.add(tuple(sorted(new_clause)))
+    # print(resolvents)
     return sorted(resolvents, key=len)
 
-def resolution(clauses, target_clause, line_num):
+def resolution(clauses, target_clause_negated, line_num):
+    sos = set(target_clause_negated.keys())
     new = set()
-    
-    sos = set([negate(target_clause)])   
+
     while True:
-        for clause_1 in sos:
-            for clause_2 in clauses.keys():
-                if clause_1!=clause_2: resolvents = plResolve(clause_1, clause_2,clauses)
-                if "NIL" in resolvents: 
-                    return True, clause_1, clause_2, None, None
-                new.update(resolvents)
-            for previous_clause in sos:
-                if previous_clause == clause_1:
-                    break  
-                resolvents = plResolve(clause_1, previous_clause,clauses)
-                if "NIL" in resolvents: 
-                    return True, clause_1, previous_clause, None, None
-                new.update(resolvents)
-        if new.issubset(clauses.keys()):
+        for clause1 in sos:
+            for clause2 in itertools.chain(clauses.keys(), sos):
+                if clause1 != clause2:
+                    resolvents = plResolve(clause1, clause2, clauses)
+                    if "NIL" in resolvents:
+                        return True, clause1, clause2, None, None
+                    new.update(resolvents)
+
+        new = remove_redundant_clauses(new - sos)
+        if not new:
             return False, None, None, None, None
+
         sos.update(new)
-        new = set()
+
 
 def cooking(path_to_clause_file,path_to_user_commands_file):
    pass
@@ -95,8 +108,8 @@ def cooking(path_to_clause_file,path_to_user_commands_file):
 def main():
    args = parse_command_line()
    if args.task=='resolution':
-      clauses,target_clause,line_num = parse_clause_file(args.path_to_clause_file)
-      found,cl1,cl2,ln1,ln2 = resolution(clauses,target_clause,line_num)
+      clauses,target_clause_negated,line_num,target_clause = parse_clause_file(args.path_to_clause_file)
+      found,cl1,cl2,ln1,ln2= resolution(clauses,target_clause_negated,line_num)
       target_clause_f = ""
       i = 0 
       for el in target_clause:
@@ -104,7 +117,7 @@ def main():
             target_clause_f = target_clause_f + str(el)
             i+=1
          else:
-            target_clause_f+=" " + str(el)
+            target_clause_f+=" v " + str(el)
       if found:
          print(f"[CONCLUSION]: {target_clause_f} is true")
       else:
