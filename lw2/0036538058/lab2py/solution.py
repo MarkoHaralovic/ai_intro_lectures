@@ -169,7 +169,7 @@ def cooking(path_to_clause_file,path_to_user_commands_file):
                 
 def resolute(path_to_clause_file):
    clauses,target_clause_negated,line_num,target_clause = parse_clause_file(path_to_clause_file)
-   found, _ , _, _, _ =  resolution(clauses,target_clause_negated,line_num,verbose=False)
+   found, _ , _, _, _ =  resolution(clauses,target_clause_negated,line_num,verbose=True)
    target_clause_f = ""
    i = 0 
    for el in target_clause:
