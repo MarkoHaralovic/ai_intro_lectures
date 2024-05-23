@@ -16,7 +16,7 @@ def confusionMatrix(predictions, labels):
     for i in range(len(unique_labels)):
         for j in range(len(unique_labels)):
             matrix[i,j] = np.sum((labels == unique_labels[i]) & (predictions == unique_labels[j]))
-    return matrix
+    return matrix   
 
 def entropy(dataset: Dataset, feature: str, feature_value=None):
     data = dataset.get_data()
@@ -44,7 +44,7 @@ def informationGain(dataset:Dataset,parentNode:str,childNodes:list):
     childEntropies = [entropy(dataset,parentNode,child) for child in childNodes]
     ig = parentNodeEntropy - sum([childEntropy[0] * childEntropy[1] / len(dataset) for childEntropy in childEntropies])
     lowest_entropy_feature = argmin([childEntropy[0] for childEntropy in childEntropies])
-    return ig,childNodes[lowest_entropy_feature] 
+    return round(ig,4),childNodes[lowest_entropy_feature] 
 
 train_set_path = r"C:\FER\6TH SEMESTER\INTRO_TO_AI\autograder\data\lab3\files\volleyball.csv"
 train_dataset = TrainDataset(train_set_path)
