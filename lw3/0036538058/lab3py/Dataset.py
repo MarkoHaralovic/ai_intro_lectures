@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 import pandas as pd
-import numpy as np
 
 class Dataset(ABC):
    @abstractmethod
@@ -25,7 +24,6 @@ class Dataset(ABC):
    def __len__(self):
       raise NotImplementedError()
 
-   
 class TrainDataset(Dataset):
    def __init__(self,data_path:str):
       self.data_path = data_path
@@ -49,7 +47,10 @@ class TrainDataset(Dataset):
       new_ds.data = self.data[self.data[feature] == feature_value]
       return new_ds
    def most_common_label(self):
-      return self.data.value_counts().idxmax()[-1] if len(self.data) else 0
+      v_c = self.get_labels().value_counts()
+      max_count = v_c.max()
+      most_common = v_c[v_c == max_count].index
+      return sorted(most_common)[0]
    
 class TestDataset(Dataset):
    def __init__(self,data_path:str):
@@ -78,14 +79,15 @@ class Leaf:
       self.v = v
    def __str__(self):
       return str(self.v)
-   def print(self):
-      print(self.v)
    
 class Node:
    def __init__(self,depth, feature, subtrees):
         self.depth=depth
         self.feature = feature
         self.subtrees = subtrees
+   def str_to_child(self):
+      for child in self.subtrees:
+         self.subtrees.parent_value = f"{self.depth}:{self.feature}={self.feature}"
    def __str__(self):
         subtree_str = "\n".join(f"{self.depth}:{self.feature}={v} {str(t)}" for v, t in self.subtrees)
         return f"{subtree_str}"

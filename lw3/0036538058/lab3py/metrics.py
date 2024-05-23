@@ -6,7 +6,7 @@ def accuracy(predictions, labels):
     return "{:.5f}".format(round(TP/len(labels),5))
 
 def confusionMatrix(predictions, labels):
-    unique_labels = list(set(labels))
+    unique_labels = sorted(list(set(labels)))
     matrix = [[0 for i in range(len(unique_labels))] for j in range(len(unique_labels))]
     for i in range(len(unique_labels)):
         for j in range(len(unique_labels)):
@@ -36,6 +36,7 @@ def entropy(dataset: Dataset, feature: str, feature_value=None):
 
 def informationGain(dataset:Dataset,parentNode:str,childNodes:list):
     parentNodeEntropy,_ = entropy(dataset,parentNode)
+    childNodes = sorted(childNodes)
     childEntropies = [entropy(dataset,parentNode,child) for child in childNodes]
     ig = parentNodeEntropy - sum([childEntropy[0] * childEntropy[1] / len(dataset) for childEntropy in childEntropies])
     lowest_entropy_feature = min([childEntropy[0] for childEntropy in enumerate(childEntropies)])

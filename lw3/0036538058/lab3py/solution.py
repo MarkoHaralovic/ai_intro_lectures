@@ -22,13 +22,12 @@ def main():
       model = DecisionTreeID3(tree_depth)
    train_dataset = TrainDataset(train_set_path)
    test_dataset = TrainDataset(test_set_path)
-   # print(test_dataset.get_target())
-   # print(test_dataset.get_features())
+
    model.fit(train_dataset)
    predictions = model.predict(test_dataset)
    
+   print("[BRANCHES]:")
    model.print_tree()
-   # print(test_dataset.get_data())
    
    preds = "".join(str(prediction) + " " for prediction in predictions)
    print(f"[PREDICTIONS]: {preds}")
