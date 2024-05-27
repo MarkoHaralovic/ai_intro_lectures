@@ -21,63 +21,81 @@ class GeneticAlgorithm:
    
    def elitism(self):
       """One or more best individuals are transferred to the next generation."""
-      fitnesses = {individual : self.fitness(individual) for individual in self.population}
-      fitnesses = sorted(fitnesses,key=lambda x:fitnesses[x],reverse=True)
-      top_individuals = fitnesses[:self._elitism]
+      fitnesses = [(individual, self.fitness(individual)) for individual in self.population]
+      sorted_by_fitness = sorted(fitnesses, key=lambda x: x[1], reverse=True)
+      top_individuals = [individual[0] for individual in sorted_by_fitness[:self._elitism]]
       return top_individuals
    
    def fitness(self,individual):
-      return 1/(mean_squared_error(self.train_dataset.get_labels(),individual.forward_pass(self.train_dataset.get_features())[0]))
+      return 1/(1e6 + mean_squared_error(self.train_dataset.get_labels(),individual.forward_pass(self.train_dataset.get_features())[0]))
       
    def selection(self):
       """Fitness proportional selection."""
-      fitness_scores = [self.fitness(individual) for individual in self.population]
-      total_fitness = sum(fitness_scores)
+      fitness_scores = [(individual, self.fitness(individual)) for individual in self.population]
+      sorted_by_fitness = sorted(fitness_scores, key=lambda x: x[1], reverse=True)
       
-      selection_probabilities = [float(fitness.item()/ total_fitness) for fitness in fitness_scores]
+      total_fitness = sum(fitness[1] for fitness in sorted_by_fitness)
       
-      selected_indices = np.random.choice(len(self.population), size=self.population_size, p=selection_probabilities, replace=True)
-      selected_individuals = [self.population[index] for index in selected_indices]
-   
-      return selected_individuals
+      parents = []
+      for _ in range(2):  
+         random_number = np.random.uniform(0, total_fitness)
+         cumulative_fitness = 0
+         for individual, fitness in sorted_by_fitness:
+               cumulative_fitness += fitness
+               if cumulative_fitness >= random_number:
+                  parents.append(individual)
+                  break 
+      
+      return parents[0], parents[1]
    
    def crossover(self,parent_1,parent_2):
       """Arithmetic mean of selected individuals."""
-      child = NeuralNetwork(parent_1.architecture)
-      for i in range(len(child.layers)):
-         layer = child.layers[i]
-         for j in range(len(layer.weights)):
-            layer.weights[j] = (parent_1.layers[i].weights[j] + parent_2.layers[i].weights[j])/2
-         for k in range(len(layer.bias)):
-            layer.bias[k] = (parent_1.layers[i].bias[k] + parent_2.layers[i].bias[k])/2
-      return child
+      child_1 = NeuralNetwork(parent_1.architecture)
+      child_2 = NeuralNetwork(parent_2.architecture)
+    
+      for i in range(len(child_1.layers)):
+        layer_1 = child_1.layers[i]
+        layer_2 = child_2.layers[i]
+        parent_1_layer = parent_1.layers[i]
+        parent_2_layer = parent_2.layers[i]
+        
+        ratio_1 = 0.3
+        ratio_2 = 0.7
+
+        layer_1.weights = ratio_1 * parent_1_layer.weights + (1 - ratio_1) * parent_2_layer.weights
+        layer_1.bias = ratio_1 * parent_1_layer.bias + (1 - ratio_1) * parent_2_layer.bias
+        
+        ratio_1 = 0.7
+        ratio_2 = 0.3
+        
+        layer_2.weights = ratio_1 * parent_1_layer.weights + (1 - ratio_1) * parent_2_layer.weights
+        layer_2.bias = ratio_1 * parent_1_layer.bias + (1 - ratio_2) * parent_2_layer.bias
+      return child_1,child_2
    
    def mutation(self,individual):
       """Crossover of selected individuals, implemented as Gaussian noise, so that tot the chromosome of weights is added vector
          from normal distribution with standard deviation K. Every chromosome weight is mutated with probability p.
       """
-      if np.random.random() > self.mutation_rate:
-         return individual
       for layer in individual.layers:
-         for i in range(len(layer.weights)):
-            layer.weights[i] += np.random.normal(0,self.mutation_scale)
+        for i in range(len(layer.weights)):
+            if np.random.random() < self.mutation_rate:
+                layer.weights[i] += np.random.normal(0, self.mutation_scale*100)
       return individual
    
    def evolve(self):
       best, best_fitness = None, -float('inf')
       
       for generation in range(self.iterations):
-         scores = [self.fitness(individual) for individual in self.population]
-         
          elites = self.elitism()
          new_population = elites[:]
 
          while len(new_population) < self.population_size:
-            parents =  self.selection()
-            parent_1,parent_2 = parents[0],parents[1]
-            child = self.crossover(parent_1,parent_2)
-            child = self.mutation(child)
-            new_population.append(child)
+            parent_1,parent_2 = self.selection()
+            child1,child2 = self.crossover(parent_1,parent_2)
+            child1 = self.mutation(child1)
+            child2 = self.mutation(child2)
+            new_population.append(child1)
+            new_population.append(child2)
             
          self.population = new_population
          
@@ -86,7 +104,7 @@ class GeneticAlgorithm:
             if fitness > best_fitness:
                best, best_fitness = individual, fitness
          
-         if generation % 200 == 0:
+         if generation % 2000 == 0 and generation!=0:
             mse_train = mean_squared_error(self.train_dataset.get_labels(), best.forward_pass(self.train_dataset.get_features())[0])
             mse_test = mean_squared_error(self.test_dataset.get_labels(), best.forward_pass(self.test_dataset.get_features())[0])
             print(f"Generation {generation}: Train MSE: {mse_train}, Test MSE: {mse_test}")

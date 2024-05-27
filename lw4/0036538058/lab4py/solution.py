@@ -51,7 +51,6 @@ def main():
    args = parse_command_line()
 
    neural_net_configuration = args.neural_net_configuration.split("s")[:-1]
-   print(neural_net_configuration)
    train_seth_path, test_seth_path = args.path_to_train_set,args.path_to_test_set
    popsize,elitism,p,K,iter = args.popsize,args.elitism,args.p,args.K,args.iter
    
@@ -62,7 +61,6 @@ def main():
                                      output_size=len(test_dataset.get_target()),
                                      neural_net_configuration=neural_net_configuration
                                      )
-   print(nn_architecture)
    geneticAlgorithm = GeneticAlgorithm(population_size=popsize,
                                     elitism=elitism,
                                     mutation_rate=p,
