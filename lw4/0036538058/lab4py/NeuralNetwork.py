@@ -38,9 +38,8 @@ class NeuralNetwork():
         return _X_activation,_X_output
    
 def sigmoid(x):
-    clipped_x = np.clip(x, -100, 100)
+    clipped_x = np.clip(x, -100, 100) #to avoid overflow
     return 1 / (1 + np.exp(-clipped_x))
-
 
 def mean_squared_error(y, y_hat):
    y = np.asarray(y).flatten()

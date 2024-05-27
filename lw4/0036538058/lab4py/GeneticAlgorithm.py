@@ -1,8 +1,8 @@
 import numpy as np
-from NeuralNetwork import NeuralNetwork,mean_squared_error,FullyConnectedLayer,sigmoid
+from NeuralNetwork import NeuralNetwork,FullyConnectedLayer,mean_squared_error,sigmoid
 from Dataset import TrainDataset,TestDataset
+
 class GeneticAlgorithm:
-   
    def __init__(self,population_size:int,elitism:int,mutation_rate:float,mutation_scale:float,
                 iterations:int,neural_net_architecture:list,train_dataset:TrainDataset,test_dataset:TestDataset
                 ):
@@ -45,7 +45,6 @@ class GeneticAlgorithm:
                if cumulative_fitness >= random_number:
                   parents.append(individual)
                   break 
-      
       return parents[0], parents[1]
    
    def crossover(self,parent_1,parent_2):
@@ -59,14 +58,14 @@ class GeneticAlgorithm:
         parent_1_layer = parent_1.layers[i]
         parent_2_layer = parent_2.layers[i]
         
-        ratio_1 = 0.3
-        ratio_2 = 0.7
+        ratio_1 = np.random.uniform(0,1)
+        ratio_2 = 1- ratio_1 
 
         layer_1.weights = ratio_1 * parent_1_layer.weights + (1 - ratio_1) * parent_2_layer.weights
         layer_1.bias = ratio_1 * parent_1_layer.bias + (1 - ratio_1) * parent_2_layer.bias
         
-        ratio_1 = 0.7
-        ratio_2 = 0.3
+        ratio_1 = np.random.uniform(0,1)
+        ratio_2 = 1- ratio_1 
         
         layer_2.weights = ratio_1 * parent_1_layer.weights + (1 - ratio_1) * parent_2_layer.weights
         layer_2.bias = ratio_1 * parent_1_layer.bias + (1 - ratio_2) * parent_2_layer.bias
@@ -107,9 +106,11 @@ class GeneticAlgorithm:
          if generation % 2000 == 0 and generation!=0:
             mse_train = mean_squared_error(self.train_dataset.get_labels(), best.forward_pass(self.train_dataset.get_features())[0])
             mse_test = mean_squared_error(self.test_dataset.get_labels(), best.forward_pass(self.test_dataset.get_features())[0])
-            print(f"Generation {generation}: Train MSE: {mse_train}, Test MSE: {mse_test}")
+            print(f"[Train error @{generation}]: {mse_train}")
+            # print(f"Generation {generation}: Train MSE: {mse_train}, Test MSE: {mse_test}")
             
       final_mse_train = mean_squared_error(self.train_dataset.get_labels(), best.forward_pass(self.train_dataset.get_features())[0])
       final_mse_test = mean_squared_error(self.test_dataset.get_labels(), best.forward_pass(self.test_dataset.get_features())[0])
-      print(f"Final Best: Train MSE: {final_mse_train}, Test MSE: {final_mse_test}")
+      print(f"[Test error]: {mse_test}")
+      # print(f"Final Best: Train MSE: {final_mse_train}, Test MSE: {final_mse_test}")
       
