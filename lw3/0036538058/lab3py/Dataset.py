@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 import pandas as pd
 
 class Dataset(ABC):
-   @abstractmethod
    def __init__(self,data_path:str,*args,**kwargs):
       raise NotImplementedError()
    @abstractmethod
