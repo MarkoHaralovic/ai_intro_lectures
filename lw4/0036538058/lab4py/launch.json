@@ -1,0 +1,23 @@
+{
+   "version": "0.2.0",
+   "configurations": [
+     {
+       "name": "Python: Debug",
+       "type": "python",
+       "request": "launch",
+       "program": "${workspaceFolder}/ai_intro_lectures/lw4/0036538058/lab4py/solution.py",
+       "args": [
+         "--train", "C:\\FER\\6TH SEMESTER\\INTRO_TO_AI\\autograder\\data\\lab4\\files\\sine_train.txt",
+         "--test", "C:\\FER\\6TH SEMESTER\\INTRO_TO_AI\\autograder\\data\\lab4\\files\\sine_test.txt",
+         "--nn", "5s",
+         "--popsize", "10",
+         "--elitism", "1",
+         "--p", "0.1",
+         "--K", "0.1",
+         "--iter", "10000"
+       ],
+       "console": "integratedTerminal"
+     }
+   ]
+ }
+ 
