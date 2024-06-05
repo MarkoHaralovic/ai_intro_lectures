@@ -60,7 +60,6 @@ def main():
                                      output_size=len(test_dataset.get_target()),
                                      neural_net_configuration=neural_net_configuration
                                      )
-   print(nn_architecture)
    geneticAlgorithm = GeneticAlgorithm(population_size=popsize,
                                     elitism=elitism,
                                     mutation_rate=p,
