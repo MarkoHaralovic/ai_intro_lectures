@@ -9,8 +9,8 @@ import numpy as np
 
 class FullyConnectedLayer():
    def __init__(self,input_size,output_size,activation):
-      self.weights = np.random.uniform(low=-0.01, high=0.01, size=(input_size, output_size))
-      self.bias = np.random.uniform(low=-0.01, high=0.01, size=(1, output_size))
+      self.weights = np.random.normal(0, 0.01, size=(input_size, output_size))
+      self.bias = np.random.normal(0, 0.01, size=(1, output_size))
       self.activation = activation
 
    def forward(self, input):
@@ -44,5 +44,5 @@ def sigmoid(x):
 def mean_squared_error(y, y_hat):
    y = np.asarray(y).flatten()
    y_hat = np.asarray(y_hat).flatten()
-   return np.mean((y - y_hat) ** 2)/len(y)
+   return np.mean((y - y_hat) ** 2)
 
